@@ -117,7 +117,7 @@
 <body>
     <div class="container">
         <h1>📷 Live Camera Feed</h1>
-        <img src="http://10.12.2.223:5000/video_feed" alt="Camera Feed">
+        <img src="http://YOUR_IP:5000/video_feed" alt="Camera Feed">
 
         <div class="controls-container">
             <!-- Arrow Controls -->
@@ -145,7 +145,7 @@
 
         // Servo movement functions
         function send(direction) {
-            fetch("http://10.12.2.223:5000/move", {
+            fetch("http://YOUR_IP:5000/move", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({direction})
@@ -164,7 +164,7 @@
 
         // Magic Button MQTT
         function sendMagic() {
-            fetch("http://10.12.2.223:5000/magic", { method: "POST" })
+            fetch("http://YOUR_IP:5000/magic", { method: "POST" })
                 .then(() => {
                     lampOn = !lampOn;
                     const stateDiv = document.getElementById("lamp-state");
