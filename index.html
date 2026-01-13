@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Raspberry Pi Camera Control</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            animation: colorCycle 20s infinite linear;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes colorCycle {
+            0%   { background-color: red; }
+            16%  { background-color: orange; }
+            32%  { background-color: yellow; }
+            48%  { background-color: green; }
+            64%  { background-color: cyan; }
+            80%  { background-color: blue; }
+            100% { background-color: violet; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.92);
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 15px;
+            font-size: 24px;
+        }
+
+        img {
+            width: 960px;
+            max-width: 90vw;
+            border-radius: 10px;
+            border: 2px solid #333;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #222;
+            color: white;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .up    { grid-column: 2; grid-row: 1; }
+        .left  { grid-column: 1; grid-row: 2; }
+        .right { grid-column: 3; grid-row: 2; }
+        .down  { grid-column: 2; grid-row: 3; }
+
+        .controls-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 15px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 50px 50px 50px;
+            gap: 8px;
+        }
+
+        .how-made-btn {
+            padding: 20px 40px;
+            font-size: 22px;
+            background-color: #444;
+            color: #fff;
+            border-radius: 12px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .how-made-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.35);
+        }
+
+        .lamp-state {
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #444;
+            padding: 10px 20px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .lamp-on { background-color: #4CAF50; color: white; }
+        .lamp-off { background-color: #F44336; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📷 Live Camera Feed</h1>
+        <img src="http://10.12.2.223:5000/video_feed" alt="Camera Feed">
+
+        <div class="controls-container">
+            <!-- Arrow Controls -->
+            <div class="controls">
+                <button class="btn up" onmousedown="startMove('up')" onmouseup="stopMove()" onmouseleave="stopMove()">⬆</button>
+                <button class="btn left" onmousedown="startMove('left')" onmouseup="stopMove()" onmouseleave="stopMove()">⬅</button>
+                <button class="btn right" onmousedown="startMove('right')" onmouseup="stopMove()" onmouseleave="stopMove()">➡</button>
+                <button class="btn down" onmousedown="startMove('down')" onmouseup="stopMove()" onmouseleave="stopMove()">⬇</button>
+            </div>
+
+            <!-- How It's Made -->
+            <a href="http://160.53.247.131:81/lndn/tuto.html" target="_blank" class="btn how-made-btn">How It's Made</a>
+
+            <!-- Magic Button -->
+            <button id="magic-btn" class="how-made-btn" onclick="sendMagic()">✨ Magic Button</button>
+        </div>
+
+        <!-- Lamp state indicator -->
+        <div id="lamp-state" class="lamp-state lamp-off">OFF</div>
+    </div>
+
+    <script>
+        let interval = null;
+        let lampOn = false;
+
+        // Servo movement functions
+        function send(direction) {
+            fetch("http://10.12.2.223:5000/move", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({direction})
+            }).catch(()=>{});
+        }
+
+        function startMove(direction) {
+            send(direction);
+            interval = setInterval(() => send(direction), 120);
+        }
+
+        function stopMove() {
+            clearInterval(interval);
+            interval = null;
+        }
+
+        // Magic Button MQTT
+        function sendMagic() {
+            fetch("http://10.12.2.223:5000/magic", { method: "POST" })
+                .then(() => {
+                    lampOn = !lampOn;
+                    const stateDiv = document.getElementById("lamp-state");
+                    stateDiv.textContent = lampOn ? "ON" : "OFF";
+                    stateDiv.className = lampOn ? "lamp-state lamp-on" : "lamp-state lamp-off";
+                })
+                .catch(() => console.warn("Failed to send Magic Button MQTT"));
+        }
+    </script>
+</body>
+</html>
+
+
